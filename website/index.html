@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Mon projet — description courte.">
+  <title>Mon Projet</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── Navigation ─────────────────────────────── -->
+  <nav class="nav">
+    <a class="nav__brand" href="/">Mon Projet</a>
+    <ul class="nav__links">
+      <li><a href="#features">Fonctionnalités</a></li>
+      <li><a href="#about">À propos</a></li>
+      <li><a href="http://localhost:7000" class="btn btn--primary" target="_blank" rel="noopener">Ouvrir l'app →</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ───────────────────────────────────── -->
+  <header class="hero">
+    <div class="container">
+      <h1 class="hero__title">Titre principal<br><span class="accent">de votre projet</span></h1>
+      <p class="hero__sub">Une ligne de description percutante. Ce que ça fait, pour qui, pourquoi maintenant.</p>
+      <div class="hero__cta">
+        <a href="http://localhost:7000" class="btn btn--primary btn--lg" target="_blank" rel="noopener">Démarrer →</a>
+        <a href="#features" class="btn btn--ghost btn--lg">En savoir plus</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Features ───────────────────────────────── -->
+  <section id="features" class="section">
+    <div class="container">
+      <h2 class="section__title">Fonctionnalités</h2>
+      <p class="section__sub">Ce que vous obtenez, expliqué simplement.</p>
+      <div class="grid grid--3">
+
+        <div class="card">
+          <div class="card__icon">⚡</div>
+          <h3 class="card__title">Rapide</h3>
+          <p class="card__body">Description de la première fonctionnalité. Expliquez la valeur concrète pour l'utilisateur.</p>
+        </div>
+
+        <div class="card">
+          <div class="card__icon">🔒</div>
+          <h3 class="card__title">Privé</h3>
+          <p class="card__body">Description de la deuxième fonctionnalité. Données locales, sous votre contrôle.</p>
+        </div>
+
+        <div class="card">
+          <div class="card__icon">🧩</div>
+          <h3 class="card__title">Extensible</h3>
+          <p class="card__body">Description de la troisième fonctionnalité. Ajoutez vos propres modules et intégrations.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── About ──────────────────────────────────── -->
+  <section id="about" class="section section--alt">
+    <div class="container container--narrow">
+      <h2 class="section__title">À propos</h2>
+      <p>Paragraphe de contexte. Expliquez qui a créé ce projet, dans quel but, et quelle philosophie guide les choix techniques.</p>
+      <p>Deuxième paragraphe optionnel. Technologie utilisée, stack, valeurs du projet (open-source, local-first, etc.).</p>
+      <a href="https://github.com/pewdiepie-archdaemon/odysseus" class="btn btn--outline" target="_blank" rel="noopener">Voir sur GitHub</a>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Mon Projet · <a href="https://github.com/pewdiepie-archdaemon/odysseus">GitHub</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>
