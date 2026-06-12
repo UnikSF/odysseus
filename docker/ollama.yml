@@ -1,0 +1,68 @@
+# Bundled-Ollama overlay. Runs Ollama as a service inside the Compose stack.
+# No model is baked in anywhere: the service's startup command launches the
+# server, then downloads the configured model(s) before settling in to serve,
+# so a fresh `docker compose up` yields a working chat with no host-side
+# model setup. Enable by setting COMPOSE_FILE in .env:
+#   COMPOSE_FILE=docker-compose.yml:docker/ollama.yml
+#   COMPOSE_FILE=docker-compose.yml;docker/ollama.yml    #(Windows)
+#
+# Skip this overlay if you already run Ollama on the Docker host — the base
+# compose file reaches that instance via host.docker.internal:11434.
+#
+# Downloaded models persist in the ollama-data volume, so the startup pull is
+# a fast no-op on later starts. Drop the volume to re-download fresh on every
+# start. Choose what to pull (space-separated) via .env:
+#   OLLAMA_PULL_MODELS=qwen2.5:1.5b qwen2.5-coder:7b
+#
+# This overlay runs Ollama on CPU, which is fine for the small default model.
+# For GPU inference inside the ollama container, add the device passthrough
+# from docker/gpu.nvidia.yml or docker/gpu.amd.yml to the ollama service.
+services:
+  odysseus:
+    environment:
+      # Point model discovery, the Cookbook scan, and the multi-agent router
+      # at the bundled service instead of the Docker host. Hard-set (not
+      # ${...:-} interpolated) on purpose: a stale OLLAMA_BASE_URL left in
+      # .env from a host-Ollama setup must not silently defeat this overlay.
+      - OLLAMA_BASE_URL=http://ollama:11434/v1
+      - AGENT_OLLAMA_URL=http://ollama:11434/api
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    ports:
+      # Loopback-only by default, like the other bundled services.
+      - "${OLLAMA_BIND:-127.0.0.1}:${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # Start the server, wait until its API answers, download the model(s),
+    # then keep serving in the foreground. The trap forwards SIGTERM/SIGINT
+    # to the server so `docker compose stop` shuts it down cleanly instead
+    # of waiting out the kill grace period.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        server=$$!
+        trap 'kill -TERM $$server' TERM INT
+        until ollama list >/dev/null 2>&1; do sleep 1; done
+        for m in ${OLLAMA_PULL_MODELS:-qwen2.5:1.5b}; do
+          echo "Pulling $$m ..."
+          ollama pull "$$m"
+        done
+        wait $$server
+    healthcheck:
+      # Reports healthy as soon as the API answers — the model download may
+      # still be running. Odysseus only gates on the API being reachable;
+      # models appear in the picker as their pull completes.
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  ollama-data:

@@ -58,18 +58,46 @@ Contributing? See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, testing, and
 pull request guidelines.
 
 ### Docker (recommended)
+
+Runs the full stack — Odysseus, ChromaDB, SearXNG, ntfy, plus a bundled
+Ollama that auto-pulls a small chat model (~1 GB on first boot) — so a fresh
+machine goes from clone to working chat in one `up`:
+
 ```bash
 git clone https://github.com/pewdiepie-archdaemon/odysseus.git
 cd odysseus
-cp .env.example .env       # optional, but recommended for explicit defaults
+cp .env.example .env
+echo 'COMPOSE_FILE=docker-compose.yml:docker/ollama.yml' >> .env   # use ; instead of : on Windows
+docker compose pull        # prebuilt image from GHCR — no local build needed
+docker compose up -d
+```
+
+Open `http://localhost:7000` when the containers are healthy. No model is
+baked into any image: the `ollama` service downloads the model as it starts
+(watch progress with `docker compose logs -f ollama`), and the model appears
+in the chat model picker once the pull completes. Later starts skip the
+download — models are cached in a volume. Pick different/extra models with
+`OLLAMA_PULL_MODELS` in `.env` (space-separated Ollama tags); see
+`docker/ollama.yml` for GPU notes and details.
+
+If you already run Ollama (or another OpenAI-compatible server) on the
+Docker host, skip the `COMPOSE_FILE` line — the stack reaches host services
+via `host.docker.internal` automatically.
+
+### Docker (build from source)
+
+Same as above, but build the image locally instead of pulling it:
+
+```bash
 docker compose up -d --build
 ```
+
 To include optional extras in the image (PDF viewer, Office extraction; includes AGPL PyMuPDF), build with `docker compose build --build-arg INSTALL_OPTIONAL=true` before `up`.
 
-Open `http://localhost:7000` when the containers are healthy. Docker Compose
-binds the web UI to `127.0.0.1` by default. If the port is taken, set
-`APP_PORT=7001` in `.env` and recreate the container. Set `APP_BIND=0.0.0.0`
-only when you intentionally want LAN/reverse-proxy access.
+With either Docker variant, Compose binds the web UI to `127.0.0.1` by
+default. If the port is taken, set `APP_PORT=7001` in `.env` and recreate
+the container. Set `APP_BIND=0.0.0.0` only when you intentionally want
+LAN/reverse-proxy access.
 
 ### Native Linux / macOS
 ```bash
@@ -117,7 +145,8 @@ expose this port directly to the public internet. To build a clickable app wrapp
 <summary>Cookbook, GPU, Ollama, and troubleshooting notes</summary>
 
 **Docker bundled services.** Compose starts Odysseus, ChromaDB, SearXNG, and
-ntfy. Odysseus and the bundled service ports bind to `127.0.0.1` by default, so
+ntfy — plus Ollama when the `docker/ollama.yml` overlay is enabled. Odysseus
+and the bundled service ports bind to `127.0.0.1` by default, so
 they are reachable from the host but not exposed to your LAN/public internet
 unless you opt in.
 

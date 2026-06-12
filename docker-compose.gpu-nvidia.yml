@@ -11,6 +11,11 @@
 # for setup details.
 services:
   odysseus:
+    # Prebuilt image published by .github/workflows/docker-publish.yml.
+    # `docker compose up` builds from source when the image is absent;
+    # run `docker compose pull odysseus` first to use the registry image
+    # instead of building locally.
+    image: ghcr.io/uniksf/odysseus:latest
     build: .
     ports:
       - "${APP_BIND:-127.0.0.1}:${APP_PORT:-7000}:7000"
