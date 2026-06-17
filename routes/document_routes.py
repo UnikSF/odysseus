@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, UploadFile, File, 
 from sqlalchemy import func
 from core.database import SessionLocal, Document, DocumentVersion
 from core.database import Session as DbSession
-from src.auth_helpers import get_current_user
+from src.auth_helpers import get_current_user, effective_user
 
 logger = logging.getLogger(__name__)
 
@@ -354,10 +354,10 @@ def setup_document_routes(session_manager, upload_handler=None) -> APIRouter:
     # ---- GET /api/documents/{session_id} ----
     @router.get("/api/documents/{session_id}")
     async def list_documents(request: Request, session_id: str) -> List[Dict[str, Any]]:
-        user = get_current_user(request)
+        user = effective_user(request)
         db = SessionLocal()
         try:
-            if not user:
+            if user is None:
                 raise HTTPException(403, "Authentication required")
             session = db.query(DbSession).filter(DbSession.id == session_id).first()
             # v2 review HIGH-9: raise 403 explicitly when the caller

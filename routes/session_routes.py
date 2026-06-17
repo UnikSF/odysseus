@@ -106,8 +106,10 @@ def _verify_session_owner(request: Request, session_id: str, session_manager=Non
     that only care about persisted sessions keep their exact prior behavior.
     """
     user = effective_user(request)
-    if not user:
+    if user is None:
         raise HTTPException(403, "Authentication required")
+    if not user:  # AUTH_ENABLED=false, skip ownership enforcement
+        return
     db = SessionLocal()
     try:
         row = db.query(DbSession.owner).filter(DbSession.id == session_id).first()
@@ -692,9 +694,10 @@ def setup_session_routes(session_manager: SessionManager, config: dict, webhook_
         db = SessionLocal()
         try:
             q = db.query(DbSession).filter(DbSession.archived == True)
-            if not user:
+            if user is None:
                 raise HTTPException(403, "Authentication required")
-            q = q.filter(DbSession.owner == user)
+            if user:
+                q = q.filter(DbSession.owner == user)
             if search:
                 safe_search = search.replace('%', r'\%').replace('_', r'\_')
                 q = q.filter(DbSession.name.ilike(f"%{safe_search}%", escape='\\'))

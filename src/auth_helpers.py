@@ -26,12 +26,21 @@ def effective_user(request: Request):
     swapping a route over is a no-op for browser users. A bearer token with no
     owner falls back to :func:`get_current_user` (the "api" pseudo-user), so it
     never escalates.
+
+    Returns ``""`` (empty string) when auth is disabled via ``AUTH_ENABLED=false``,
+    matching :func:`require_user` semantics so ownership checks can distinguish
+    "auth disabled" (``""`` → skip filtering) from "not logged in" (``None`` → 403).
     """
     if getattr(request.state, "api_token", False):
         owner = getattr(request.state, "api_token_owner", None)
         if owner:
             return owner
-    return get_current_user(request)
+    u = get_current_user(request)
+    if u:
+        return u
+    if _auth_disabled():
+        return ""
+    return None
 
 
 def _auth_disabled() -> bool:

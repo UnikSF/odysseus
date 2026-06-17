@@ -79,6 +79,8 @@ def _verify_doc_owner(db, doc: Document, user: str):
     """
     if user is None:
         raise HTTPException(403, "Authentication required")
+    if not user:  # AUTH_ENABLED=false, skip ownership check
+        return
     if doc.owner is not None:
         if doc.owner != user:
             raise HTTPException(404, "Document not found")
