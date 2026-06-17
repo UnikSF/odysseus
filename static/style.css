@@ -36141,3 +36141,86 @@ body.theme-frosted .modal {
   0%   { box-shadow: 0 0 0 2px var(--accent, var(--red)); }
   100% { box-shadow: 0 0 0 2px transparent; }
 }
+
+/* ── Benchmark / Decision mode ─────────────────────────────────────────── */
+.benchmark-card .benchmark-body { display: flex; flex-direction: column; gap: 12px; }
+.benchmark-intro { font-size: 0.95em; opacity: 0.85; }
+.benchmark-loading { display: flex; align-items: center; gap: 10px; opacity: 0.8; font-size: 0.95em; }
+.benchmark-spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-top-color: var(--color-accent);
+  animation: benchmark-spin 0.8s linear infinite;
+}
+@keyframes benchmark-spin { to { transform: rotate(360deg); } }
+.benchmark-error { color: var(--color-error); font-size: 0.92em; }
+
+.benchmark-questions { display: flex; flex-direction: column; gap: 10px; }
+.benchmark-q { display: flex; flex-direction: column; gap: 4px; }
+.benchmark-q label { font-size: 0.9em; opacity: 0.9; }
+.benchmark-input {
+  background: var(--bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 7px 10px; font-size: 0.92em; outline: none;
+}
+.benchmark-input:focus { border-color: var(--color-accent); }
+
+.benchmark-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.benchmark-btn {
+  background: color-mix(in srgb, var(--panel) 70%, var(--bg));
+  color: var(--fg); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 14px; font-size: 0.9em; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.benchmark-btn:hover { border-color: var(--color-accent); }
+.benchmark-btn.primary {
+  background: color-mix(in srgb, var(--color-accent) 22%, var(--panel));
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--border));
+}
+.benchmark-btn.primary:hover { background: color-mix(in srgb, var(--color-accent) 34%, var(--panel)); }
+
+.benchmark-weights { display: flex; flex-direction: column; gap: 12px; }
+.benchmark-weight-head { display: flex; justify-content: space-between; align-items: baseline; }
+.benchmark-weight-name { font-size: 0.92em; font-weight: 600; }
+.benchmark-weight-val { font-size: 0.9em; color: var(--color-accent); font-variant-numeric: tabular-nums; }
+.benchmark-slider { width: 100%; accent-color: var(--color-accent); margin: 4px 0 2px; }
+.benchmark-weight-why { font-size: 0.82em; opacity: 0.6; }
+.benchmark-weight-total { font-size: 0.8em; opacity: 0.55; }
+
+.benchmark-results { display: flex; flex-direction: column; gap: 10px; }
+.benchmark-result {
+  border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px;
+  background: color-mix(in srgb, var(--panel) 50%, transparent);
+}
+.benchmark-result.winner {
+  border-color: color-mix(in srgb, var(--green) 60%, var(--border));
+  background: color-mix(in srgb, var(--green) 8%, transparent);
+}
+.benchmark-result-head { display: flex; align-items: center; gap: 8px; }
+.benchmark-rank { font-size: 0.8em; opacity: 0.6; font-variant-numeric: tabular-nums; }
+.benchmark-result-name { font-weight: 600; flex: 1; }
+.benchmark-best-tag {
+  font-size: 0.7em; font-weight: 600; color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 50%, transparent);
+  border-radius: 5px; padding: 1px 5px; margin-left: 4px; vertical-align: middle;
+}
+.benchmark-total { font-size: 1.25em; font-weight: 700; color: var(--color-accent); font-variant-numeric: tabular-nums; }
+.benchmark-total-max { font-size: 0.55em; font-weight: 400; opacity: 0.5; }
+.benchmark-result-summary { font-size: 0.86em; opacity: 0.75; margin: 6px 0 8px; }
+.benchmark-crits { display: flex; flex-direction: column; gap: 5px; }
+.benchmark-crit { display: grid; grid-template-columns: minmax(110px, 38%) 1fr 28px; align-items: center; gap: 8px; }
+.benchmark-crit-name { font-size: 0.8em; opacity: 0.85; }
+.benchmark-crit-wt { opacity: 0.5; font-size: 0.9em; }
+.benchmark-bar { height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--border) 50%, transparent); overflow: hidden; }
+.benchmark-bar-fill { display: block; height: 100%; background: var(--color-accent); border-radius: 4px; }
+.benchmark-result.winner .benchmark-bar-fill { background: var(--green); }
+.benchmark-crit-score { font-size: 0.8em; text-align: right; opacity: 0.8; font-variant-numeric: tabular-nums; }
+
+.benchmark-sources { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.benchmark-sources-label { font-size: 0.75em; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 2px; }
+.benchmark-source {
+  font-size: 0.78em; color: var(--color-link-hover);
+  border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px;
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.benchmark-source:hover { border-color: var(--color-accent); }

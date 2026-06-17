@@ -564,6 +564,10 @@ app.include_router(setup_chat_routes(
 from routes.research_routes import setup_research_routes
 app.include_router(setup_research_routes(research_handler, session_manager=session_manager))
 
+# Benchmark / Decision mode
+from routes.benchmark_routes import setup_benchmark_routes
+app.include_router(setup_benchmark_routes(session_manager))
+
 # History
 from routes.history_routes import setup_history_routes
 app.include_router(setup_history_routes(session_manager))

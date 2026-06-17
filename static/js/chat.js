@@ -254,6 +254,13 @@ import createResearchSynapse from './researchSynapse.js';
       return;
     }
 
+    // If Benchmark / Decision mode is active, run the guided weighted-search
+    // wizard instead of the normal chat stream.
+    if (window.benchmarkModule && window.benchmarkModule.isActive()) {
+      window.benchmarkModule.handleSubmit();
+      return;
+    }
+
     // If currently streaming, stop it
     if (isStreaming) {
       // Cancel server-side research if in progress
