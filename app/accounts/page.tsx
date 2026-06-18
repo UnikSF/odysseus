@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import type { Account } from "@/lib/types";
 import type { Institution } from "@/lib/gocardless";
 
@@ -174,9 +175,9 @@ function AccountsContent() {
         {!gcConfigured && (
           <p className="text-sm text-slate-500">
             Set up your GoCardless API credentials in{" "}
-            <a href="/settings" className="text-emerald-400 underline">
+            <Link href="/settings" className="text-emerald-400 underline">
               Settings
-            </a>{" "}
+            </Link>{" "}
             first.
           </p>
         )}

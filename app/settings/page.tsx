@@ -292,7 +292,7 @@ export default function SettingsPage() {
                     <button
                       className="text-slate-400 underline hover:text-slate-200"
                       onClick={() =>
-                        navigator.clipboard.writeText(`${window.location.origin}/invite/${inv.token}`)
+                        navigator.clipboard.writeText(`${window.location.origin}/finance/invite/${inv.token}`)
                       }
                     >
                       Copy link
