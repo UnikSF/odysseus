@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createInviteToken, listInviteTokens, revokeInviteToken, getSessionUserId, SESSION_COOKIE_NAME } from "@/lib/auth";
+import { appUrl } from "@/lib/publicUrl";
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
   const { label } = (await req.json()) as { label?: string };
   const inviteToken = createInviteToken(label ?? "");
-  const url = `${req.nextUrl.origin}/invite/${inviteToken}`;
+  const url = appUrl(req, `/invite/${inviteToken}`);
   return NextResponse.json({ token: inviteToken, url });
 }
 

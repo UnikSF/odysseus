@@ -4,6 +4,7 @@ import { getRequisition, getAccountDetails, getAccountTransactions, type GCTrans
 import { applyRules } from "@/lib/categorize";
 import { getDb } from "@/lib/db";
 import type { Category } from "@/lib/types";
+import { appUrl } from "@/lib/publicUrl";
 
 type GuestTx = {
   date: string;
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
   const institution = req.nextUrl.searchParams.get("institution") ?? "Bank";
 
   if (!validateInviteToken(token)) {
-    return NextResponse.redirect(new URL(`/invite/${token}?error=expired`, req.nextUrl.origin));
+    return NextResponse.redirect(appUrl(req, `/invite/${token}?error=expired`));
   }
 
   const requisitionId =
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest) {
     null;
 
   if (!requisitionId) {
-    return NextResponse.redirect(new URL(`/invite/${token}?error=noref`, req.nextUrl.origin));
+    return NextResponse.redirect(appUrl(req, `/invite/${token}?error=noref`));
   }
 
   try {
@@ -151,9 +152,9 @@ export async function GET(req: NextRequest) {
       "INSERT OR REPLACE INTO guest_results (token, data, expires_at) VALUES (?, ?, ?)"
     ).run(token, JSON.stringify(results), expiresAt);
 
-    return NextResponse.redirect(new URL(`/invite/${token}/results`, req.nextUrl.origin));
+    return NextResponse.redirect(appUrl(req, `/invite/${token}/results`));
   } catch (e) {
     console.error("Invite callback error:", e);
-    return NextResponse.redirect(new URL(`/invite/${token}?error=sync`, req.nextUrl.origin));
+    return NextResponse.redirect(appUrl(req, `/invite/${token}?error=sync`));
   }
 }

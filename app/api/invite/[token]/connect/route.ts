@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateInviteToken } from "@/lib/auth";
 import { createRequisition, gocardlessConfigured } from "@/lib/gocardless";
+import { appUrl } from "@/lib/publicUrl";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     return NextResponse.json({ error: "institution_id required" }, { status: 400 });
   }
 
-  const redirect = `${req.nextUrl.origin}/api/invite/callback?token=${encodeURIComponent(token)}&institution=${encodeURIComponent(institution_name ?? institution_id)}`;
+  const redirect = appUrl(req, `/api/invite/callback?token=${encodeURIComponent(token)}&institution=${encodeURIComponent(institution_name ?? institution_id)}`);
   try {
     const requisition = await createRequisition(institution_id, redirect);
     return NextResponse.json({ link: requisition.link });

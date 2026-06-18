@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getAccountDetails, getRequisition } from "@/lib/gocardless";
+import { appUrl } from "@/lib/publicUrl";
 
 /** GoCardless redirects here after the user authorizes at their bank (?ref=<requisition_id>). */
 export async function GET(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
     requisitionId = latest?.id ?? null;
   }
   if (!requisitionId) {
-    return NextResponse.redirect(new URL("/settings?bank=error", req.nextUrl.origin));
+    return NextResponse.redirect(appUrl(req, "/settings?bank=error"));
   }
 
   try {
@@ -47,8 +48,8 @@ export async function GET(req: NextRequest) {
       requisition.status ?? "linked",
       requisitionId
     );
-    return NextResponse.redirect(new URL("/accounts?bank=connected", req.nextUrl.origin));
+    return NextResponse.redirect(appUrl(req, "/accounts?bank=connected"));
   } catch {
-    return NextResponse.redirect(new URL("/accounts?bank=error", req.nextUrl.origin));
+    return NextResponse.redirect(appUrl(req, "/accounts?bank=error"));
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { createRequisition, gocardlessConfigured } from "@/lib/gocardless";
+import { appUrl } from "@/lib/publicUrl";
 
 export async function POST(req: NextRequest) {
   if (!gocardlessConfigured()) {
@@ -11,7 +12,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "institution_id required" }, { status: 400 });
   }
 
-  const redirect = `${req.nextUrl.origin}/api/bank/callback`;
+  // Must include the basePath ("/finance") and the public host so GoCardless
+  // redirects the user back to a route the reverse proxy actually serves.
+  const redirect = appUrl(req, "/api/bank/callback");
   try {
     const requisition = await createRequisition(body.institution_id, redirect);
     getDb()
