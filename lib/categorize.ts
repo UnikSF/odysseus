@@ -6,7 +6,7 @@ export function aiConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY || getSetting("anthropic_api_key"));
 }
 
-function getAnthropicKey(): string | undefined {
+export function getAnthropicKey(): string | undefined {
   return process.env.ANTHROPIC_API_KEY || getSetting("anthropic_api_key") || undefined;
 }
 
@@ -30,8 +30,11 @@ export async function categorizeUncategorized(): Promise<{ byRule: number; byAi:
     .prepare("SELECT * FROM transactions WHERE category_id IS NULL ORDER BY date DESC")
     .all() as Transaction[];
 
-  const setCategory = db.prepare(
-    "UPDATE transactions SET category_id = ?, categorized_by = ? WHERE id = ?"
+  const setRuleCategory = db.prepare(
+    "UPDATE transactions SET category_id = ?, categorized_by = 'rule', ai_confidence = 'high' WHERE id = ?"
+  );
+  const setAiCategory = db.prepare(
+    "UPDATE transactions SET category_id = ?, categorized_by = 'ai', ai_confidence = ? WHERE id = ?"
   );
 
   let byRule = 0;
@@ -39,7 +42,7 @@ export async function categorizeUncategorized(): Promise<{ byRule: number; byAi:
   for (const t of uncategorized) {
     const catId = applyRules(t.merchant, t.description);
     if (catId) {
-      setCategory.run(catId, "rule", t.id);
+      setRuleCategory.run(catId, t.id);
       byRule++;
     } else {
       remaining.push(t);
@@ -56,7 +59,7 @@ export async function categorizeUncategorized(): Promise<{ byRule: number; byAi:
       for (const r of results) {
         const cat = categories.find((c) => c.name === r.category);
         if (cat && chunk.some((t) => t.id === r.id)) {
-          setCategory.run(cat.id, "ai", r.id);
+          setAiCategory.run(cat.id, r.confidence ?? "medium", r.id);
           byAi++;
         }
       }
@@ -66,7 +69,7 @@ export async function categorizeUncategorized(): Promise<{ byRule: number; byAi:
   return { byRule, byAi, pending: remaining.length - byAi };
 }
 
-type AiCategorization = { id: string; category: string };
+type AiCategorization = { id: string; category: string; confidence?: "high" | "medium" | "low" };
 
 async function aiCategorizeBatch(
   transactions: Transaction[],
@@ -85,8 +88,13 @@ async function aiCategorizeBatch(
           properties: {
             id: { type: "string", description: "The transaction id, copied verbatim" },
             category: { type: "string", enum: categoryNames },
+            confidence: {
+              type: "string",
+              enum: ["high", "medium", "low"],
+              description: "How confident you are in this category",
+            },
           },
-          required: ["id", "category"],
+          required: ["id", "category", "confidence"],
           additionalProperties: false,
         },
       },

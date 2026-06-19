@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { useI18n } from "@/lib/i18n";
 
 type GuestTx = {
   date: string;
@@ -27,6 +28,7 @@ function fmtEur(n: number) {
 }
 
 export default function GuestResultsPage({ params }: { params: Promise<{ token: string }> }) {
+  const { t, tCat } = useI18n();
   const { token } = use(params);
   const [results, setResults] = useState<Results | null>(null);
   const [error, setError] = useState("");
@@ -38,7 +40,7 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
         if (d.error) setError(d.error);
         else setResults(d);
       })
-      .catch(() => setError("Failed to load results"));
+      .catch(() => setError(t({ fr: "Échec du chargement des résultats", en: "Failed to load results" })));
   }, [token]);
 
   if (error) {
@@ -48,7 +50,7 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
           <div className="mb-3 text-3xl">💸</div>
           <p className="text-slate-400">{error}</p>
           <a href={`/invite/${token}`} className="mt-4 inline-block text-sm text-emerald-400 underline">
-            ← Try again
+            {t({ fr: "← Réessayer", en: "← Try again" })}
           </a>
         </div>
       </div>
@@ -58,7 +60,7 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
   if (!results) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">
-        <p className="text-slate-500">Loading your insights…</p>
+        <p className="text-slate-500">{t({ fr: "Chargement de vos analyses…", en: "Loading your insights…" })}</p>
       </div>
     );
   }
@@ -71,18 +73,18 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
         {/* Header */}
         <div className="text-center">
           <div className="mb-1 text-3xl">💸</div>
-          <h1 className="text-xl font-semibold text-slate-100">Your financial snapshot</h1>
+          <h1 className="text-xl font-semibold text-slate-100">{t({ fr: "Votre aperçu financier", en: "Your financial snapshot" })}</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {results.accounts.map((a) => a.name).join(", ")} · read-only, not saved
+            {results.accounts.map((a) => a.name).join(", ")} · {t({ fr: "lecture seule, non enregistré", en: "read-only, not saved" })}
           </p>
         </div>
 
         {/* KPIs */}
         <div className="grid grid-cols-3 gap-3">
-          <Kpi label="Income" value={fmtEur(results.income)} tone="text-emerald-400" />
-          <Kpi label="Expenses" value={fmtEur(results.expenses)} tone="text-rose-400" />
+          <Kpi label={t({ fr: "Revenus", en: "Income" })} value={fmtEur(results.income)} tone="text-emerald-400" />
+          <Kpi label={t({ fr: "Dépenses", en: "Expenses" })} value={fmtEur(results.expenses)} tone="text-rose-400" />
           <Kpi
-            label="Net"
+            label={t({ fr: "Solde net", en: "Net" })}
             value={fmtEur(results.net)}
             tone={results.net >= 0 ? "text-emerald-400" : "text-rose-400"}
           />
@@ -91,7 +93,7 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
         {/* Spending by category */}
         {results.byCategory.length > 0 && (
           <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-slate-300">Spending by category</h2>
+            <h2 className="text-sm font-semibold text-slate-300">{t({ fr: "Dépenses par catégorie", en: "Spending by category" })}</h2>
             <div className="flex gap-6">
               <ResponsiveContainer width={160} height={160}>
                 <PieChart>
@@ -120,7 +122,7 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
                 {results.byCategory.slice(0, 8).map((c) => (
                   <div key={c.name} className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-1.5 text-slate-300">
-                      <span>{c.icon}</span> {c.name}
+                      <span>{c.icon}</span> {tCat(c.name)}
                     </span>
                     <span className="text-slate-400">{fmtEur(c.total)}</span>
                   </div>
@@ -133,7 +135,7 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
         {/* Top merchants */}
         {results.topMerchants.length > 0 && (
           <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-slate-300">Top merchants</h2>
+            <h2 className="text-sm font-semibold text-slate-300">{t({ fr: "Principaux commerçants", en: "Top merchants" })}</h2>
             {results.topMerchants.map((m) => (
               <div key={m.merchant}>
                 <div className="mb-1 flex justify-between text-sm">
@@ -154,7 +156,7 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
         {/* Recent transactions */}
         {results.recentTx.length > 0 && (
           <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-slate-300">Recent transactions</h2>
+            <h2 className="text-sm font-semibold text-slate-300">{t({ fr: "Transactions récentes", en: "Recent transactions" })}</h2>
             <div className="space-y-1">
               {results.recentTx.map((tx, i) => (
                 <div
@@ -166,7 +168,7 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
                       {tx.category_icon ?? "🏷️"} {tx.merchant || "—"}
                     </div>
                     <div className="text-xs text-slate-500">
-                      {tx.date} · {tx.category ?? "Uncategorized"}
+                      {tx.date} · {tx.category ? tCat(tx.category) : t({ fr: "Non catégorisé", en: "Uncategorized" })}
                     </div>
                   </div>
                   <span
@@ -181,7 +183,10 @@ export default function GuestResultsPage({ params }: { params: Promise<{ token: 
         )}
 
         <p className="text-center text-xs text-slate-700">
-          This view is temporary and will expire in 2 hours. No data was stored.
+          {t({
+            fr: "Cette vue est temporaire et expirera dans 2 heures. Aucune donnée n'a été enregistrée.",
+            en: "This view is temporary and will expire in 2 hours. No data was stored.",
+          })}
         </p>
       </div>
     </div>

@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { BudgetBar } from "@/components/BudgetBar";
 import { currentMonth, fmtEur } from "@/lib/format";
+import { useI18n, useT } from "@/lib/i18n";
 import type { BudgetProgress } from "@/lib/stats";
 import type { Category } from "@/lib/types";
 
 export default function BudgetsPage() {
+  const t = useT();
+  const { tCat } = useI18n();
   const [budgets, setBudgets] = useState<BudgetProgress[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [edited, setEdited] = useState<Record<number, string>>({});
@@ -48,8 +51,14 @@ export default function BudgetsPage() {
     const data = await res.json();
     setMessage(
       data.applied > 0
-        ? `Suggested budgets applied to ${data.applied} categories (based on your last 3 months).`
-        : "Not enough spending history yet to suggest budgets (needs ~1 month of transactions)."
+        ? t({
+            fr: `Budgets suggérés appliqués à ${data.applied} catégories (basés sur vos 3 derniers mois).`,
+            en: `Suggested budgets applied to ${data.applied} categories (based on your last 3 months).`,
+          })
+        : t({
+            fr: "Pas encore assez d'historique de dépenses pour suggérer des budgets (il faut environ 1 mois de transactions).",
+            en: "Not enough spending history yet to suggest budgets (needs ~1 month of transactions).",
+          })
     );
     load();
   }
@@ -57,9 +66,9 @@ export default function BudgetsPage() {
   return (
     <div className="max-w-3xl space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Budgets</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t({ fr: "Budgets", en: "Budgets" })}</h1>
         <button className="btn-primary" onClick={autoSuggest}>
-          ✨ Auto-suggest from history
+          ✨ {t({ fr: "Suggestion auto depuis l'historique", en: "Auto-suggest from history" })}
         </button>
       </div>
 
@@ -68,7 +77,7 @@ export default function BudgetsPage() {
       {budgets.length > 0 && (
         <div className="card">
           <div className="mb-2 flex justify-between text-sm">
-            <span className="font-semibold text-slate-300">Total this month</span>
+            <span className="font-semibold text-slate-300">{t({ fr: "Total ce mois-ci", en: "Total this month" })}</span>
             <span className={totalSpent > totalBudget ? "text-rose-400" : "text-slate-400"}>
               {fmtEur(totalSpent)} / {fmtEur(totalBudget, true)}
             </span>
@@ -105,7 +114,7 @@ export default function BudgetsPage() {
             />
             <button
               className="text-slate-600 hover:text-rose-400"
-              title="Remove budget"
+              title={t({ fr: "Supprimer le budget", en: "Remove budget" })}
               onClick={() => save(b.category_id, "0")}
             >
               ✕
@@ -114,13 +123,16 @@ export default function BudgetsPage() {
         ))}
         {budgets.length === 0 && (
           <p className="text-sm text-slate-500">
-            No budgets yet. Use auto-suggest, or add one per category below.
+            {t({
+              fr: "Aucun budget pour l'instant. Utilisez la suggestion auto, ou ajoutez-en un par catégorie ci-dessous.",
+              en: "No budgets yet. Use auto-suggest, or add one per category below.",
+            })}
           </p>
         )}
       </div>
 
       <div className="card">
-        <h2 className="mb-3 text-sm font-semibold text-slate-300">Add a budget</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-300">{t({ fr: "Ajouter un budget", en: "Add a budget" })}</h2>
         <div className="flex flex-wrap gap-2">
           {expenseCategories
             .filter((c) => !withBudget.has(c.id))
@@ -129,9 +141,9 @@ export default function BudgetsPage() {
                 key={c.id}
                 className="btn-secondary"
                 onClick={() => save(c.id, "100")}
-                title="Adds with a 100 € default — edit afterwards"
+                title={t({ fr: "Ajoute avec 100 € par défaut — modifiable ensuite", en: "Adds with a 100 € default — edit afterwards" })}
               >
-                {c.icon} {c.name}
+                {c.icon} {tCat(c.name)}
               </button>
             ))}
         </div>

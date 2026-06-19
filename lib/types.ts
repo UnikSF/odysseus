@@ -6,6 +6,18 @@ export type Category = {
   kind: "expense" | "income" | "transfer";
 };
 
+export type Receipt = {
+  id: string;
+  transaction_id: string | null;
+  file_path: string;
+  mime: string;
+  merchant: string;
+  total: number | null;
+  currency: string;
+  parsed_json: string;
+  created_at: string;
+};
+
 export type Account = {
   id: string;
   name: string;
@@ -14,6 +26,7 @@ export type Account = {
   gocardless_account_id: string | null;
   requisition_id: string | null;
   currency: string;
+  baseline_synced: number;
   created_at: string;
 };
 
@@ -27,6 +40,8 @@ export type Transaction = {
   description: string;
   category_id: number | null;
   categorized_by: "rule" | "ai" | "user" | null;
+  ai_confidence: "high" | "medium" | "low" | null;
+  receipt_id: string | null;
   source: "bank" | "manual";
   created_at: string;
   // joined fields

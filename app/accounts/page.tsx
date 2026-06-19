@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useT } from "@/lib/i18n";
 import type { Account } from "@/lib/types";
 import type { Institution } from "@/lib/gocardless";
 
@@ -22,6 +23,7 @@ export default function AccountsPage() {
 }
 
 function AccountsContent() {
+  const t = useT();
   const searchParams = useSearchParams();
   const bankResult = searchParams.get("bank");
 
@@ -49,11 +51,11 @@ function AccountsContent() {
       const res = await fetch("/finance/api/bank/institutions?country=fr");
       const data = await res.json();
       if (res.ok) setInstitutions(data);
-      else setMessage(data.error ?? "Failed to load banks");
+      else setMessage(data.error ?? t({ fr: "Échec du chargement des banques", en: "Failed to load banks" }));
     } finally {
       setLoadingInstitutions(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadStatus();
@@ -78,7 +80,9 @@ function AccountsContent() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setMessage(data.error ?? "Failed to start bank connection");
+        setMessage(
+          data.error ?? t({ fr: "Échec du démarrage de la connexion bancaire", en: "Failed to start bank connection" })
+        );
         return;
       }
       window.location.href = data.link;
@@ -94,12 +98,19 @@ function AccountsContent() {
       const res = await fetch("/finance/api/bank/sync", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setMessage(data.error ?? "Sync failed");
+        setMessage(data.error ?? t({ fr: "Échec de la synchronisation", en: "Sync failed" }));
       } else {
         setMessage(
-          `Synced ${data.accounts} account(s): ${data.inserted} new transactions — ` +
-            `${data.categorized.byRule} categorized by rules, ${data.categorized.byAi} by AI, ` +
-            `${data.categorized.pending} pending.`
+          t({
+            fr:
+              `${data.accounts} compte(s) synchronisé(s) : ${data.inserted} nouvelles transactions — ` +
+              `${data.categorized.byRule} catégorisées par règles, ${data.categorized.byAi} par IA, ` +
+              `${data.categorized.pending} en attente.`,
+            en:
+              `Synced ${data.accounts} account(s): ${data.inserted} new transactions — ` +
+              `${data.categorized.byRule} categorized by rules, ${data.categorized.byAi} by AI, ` +
+              `${data.categorized.pending} pending.`,
+          })
         );
       }
     } finally {
@@ -121,22 +132,32 @@ function AccountsContent() {
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Accounts</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t({ fr: "Comptes", en: "Accounts" })}
+        </h1>
         {accounts.some((a) => a.type === "bank") && (
           <button className="btn-primary" onClick={sync} disabled={syncing}>
-            {syncing ? "Syncing…" : "Sync transactions"}
+            {syncing
+              ? t({ fr: "Synchronisation…", en: "Syncing…" })
+              : t({ fr: "Synchroniser les transactions", en: "Sync transactions" })}
           </button>
         )}
       </div>
 
       {bankResult === "connected" && (
         <div className="card border-emerald-800/50 bg-emerald-950/30 text-sm text-emerald-200">
-          Bank connected! Click &quot;Sync transactions&quot; to import your history.
+          {t({
+            fr: "Banque connectée ! Cliquez sur « Synchroniser les transactions » pour importer votre historique.",
+            en: 'Bank connected! Click "Sync transactions" to import your history.',
+          })}
         </div>
       )}
       {bankResult === "error" && (
         <div className="card border-rose-800/50 bg-rose-950/20 text-sm text-rose-200">
-          Connection failed or was cancelled. Try again.
+          {t({
+            fr: "La connexion a échoué ou a été annulée. Réessayez.",
+            en: "Connection failed or was cancelled. Try again.",
+          })}
         </div>
       )}
       {message && <div className="card py-3 text-sm text-slate-300">{message}</div>}
@@ -145,7 +166,10 @@ function AccountsContent() {
       {accounts.length > 0 && (
         <section className="card space-y-3">
           <h2 className="text-sm font-semibold text-slate-300">
-            Connected accounts · {txCount} transactions
+            {t({
+              fr: `Comptes connectés · ${txCount} transactions`,
+              en: `Connected accounts · ${txCount} transactions`,
+            })}
           </h2>
           <ul className="space-y-2">
             {accounts.map((a) => (
@@ -158,10 +182,14 @@ function AccountsContent() {
                     {a.type === "bank" ? "🏦" : "✋"} {a.name}
                   </div>
                   <div className="text-xs text-slate-500">
-                    {a.institution ?? "Manual"} · {a.currency}
+                    {a.institution ?? t({ fr: "Manuel", en: "Manual" })} · {a.currency}
                   </div>
                 </div>
-                <span className="badge bg-slate-800 text-slate-400">{a.type}</span>
+                <span className="badge bg-slate-800 text-slate-400">
+                  {a.type === "bank"
+                    ? t({ fr: "banque", en: "bank" })
+                    : t({ fr: "manuel", en: "manual" })}
+                </span>
               </li>
             ))}
           </ul>
@@ -170,20 +198,27 @@ function AccountsContent() {
 
       {/* Add bank account */}
       <section className="card space-y-4">
-        <h2 className="text-sm font-semibold text-slate-300">Add a bank account</h2>
+        <h2 className="text-sm font-semibold text-slate-300">
+          {t({ fr: "Ajouter un compte bancaire", en: "Add a bank account" })}
+        </h2>
 
         {!gcConfigured && (
           <p className="text-sm text-slate-500">
-            Set up your GoCardless API credentials in{" "}
+            {t({
+              fr: "Configurez d'abord vos identifiants API GoCardless dans ",
+              en: "Set up your GoCardless API credentials in ",
+            })}
             <Link href="/settings" className="text-emerald-400 underline">
-              Settings
-            </Link>{" "}
-            first.
+              {t({ fr: "Paramètres", en: "Settings" })}
+            </Link>
+            {t({ fr: ".", en: " first." })}
           </p>
         )}
 
         {gcConfigured && loadingInstitutions && (
-          <p className="text-sm text-slate-500">Loading banks…</p>
+          <p className="text-sm text-slate-500">
+            {t({ fr: "Chargement des banques…", en: "Loading banks…" })}
+          </p>
         )}
 
         {gcConfigured && !loadingInstitutions && institutions.length > 0 && (
@@ -191,7 +226,9 @@ function AccountsContent() {
             {/* Featured banks */}
             {featuredFiltered.length > 0 && search === "" && (
               <div className="space-y-2">
-                <p className="text-xs text-slate-500">Popular banks</p>
+                <p className="text-xs text-slate-500">
+                  {t({ fr: "Banques populaires", en: "Popular banks" })}
+                </p>
                 <div className="grid grid-cols-3 gap-2">
                   {featuredFiltered.map((inst) => (
                     <button
@@ -205,10 +242,14 @@ function AccountsContent() {
                       <div className="min-w-0">
                         <div className="truncate font-medium leading-tight">{inst.name}</div>
                         {connectedIds.has(inst.name) && (
-                          <div className="text-xs text-emerald-400">Connected</div>
+                          <div className="text-xs text-emerald-400">
+                            {t({ fr: "Connecté", en: "Connected" })}
+                          </div>
                         )}
                         {connecting === inst.id && (
-                          <div className="text-xs text-slate-400">Connecting…</div>
+                          <div className="text-xs text-slate-400">
+                            {t({ fr: "Connexion…", en: "Connecting…" })}
+                          </div>
                         )}
                       </div>
                     </button>
@@ -220,11 +261,13 @@ function AccountsContent() {
             {/* Search */}
             <div className="space-y-2">
               {search === "" && featuredFiltered.length > 0 && (
-                <p className="text-xs text-slate-500">Other banks</p>
+                <p className="text-xs text-slate-500">
+                  {t({ fr: "Autres banques", en: "Other banks" })}
+                </p>
               )}
               <input
                 className="input w-full"
-                placeholder="Search banks…"
+                placeholder={t({ fr: "Rechercher des banques…", en: "Search banks…" })}
                 value={bankSearch}
                 onChange={(e) => setBankSearch(e.target.value)}
               />
@@ -248,13 +291,20 @@ function AccountsContent() {
                 </button>
               ))}
               {search !== "" && featuredFiltered.length === 0 && filtered.length === 0 && (
-                <p className="col-span-2 text-sm text-slate-500">No banks match &quot;{search}&quot;.</p>
+                <p className="col-span-2 text-sm text-slate-500">
+                  {t({
+                    fr: `Aucune banque ne correspond à « ${search} ».`,
+                    en: `No banks match "${search}".`,
+                  })}
+                </p>
               )}
             </div>
 
             <p className="text-xs text-slate-500">
-              You will be redirected to your bank to authorize read-only access (PSD2), then sent
-              back here automatically.
+              {t({
+                fr: "Vous serez redirigé vers votre banque pour autoriser un accès en lecture seule (DSP2), puis renvoyé ici automatiquement.",
+                en: "You will be redirected to your bank to authorize read-only access (PSD2), then sent back here automatically.",
+              })}
             </p>
           </>
         )}

@@ -1,25 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getDb } from "./db";
+import { getAnthropicKey } from "./categorize";
 import { detectRecurring } from "./recurring";
 import { budgetProgress, monthlyFlows, spendingByCategory, topMerchants } from "./stats";
 import type { Insight, InsightProposition } from "./types";
+import { DEFAULT_LOCALE, type Locale } from "./i18n-shared";
 
-const PROPOSITION_TYPES = [
-  "cancel_subscription",
-  "reduce_spending",
-  "unusual_activity",
-  "savings_opportunity",
-  "positive_trend",
-] as const;
-
-export async function generateInsight(): Promise<Insight> {
+/** Snapshot of the user's finances used by both the insights generator and the chat. */
+export function buildFinanceContext() {
   const db = getDb();
   const now = new Date();
   const thisMonth = now.toISOString().slice(0, 7);
   const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
   const prevMonth = prev.toISOString().slice(0, 7);
 
-  const context = {
+  return {
     current_month: thisMonth,
     monthly_flows_last_6_months: monthlyFlows(6),
     spending_by_category_this_month: spendingByCategory(thisMonth),
@@ -29,6 +24,19 @@ export async function generateInsight(): Promise<Insight> {
     budgets: budgetProgress(thisMonth),
     goals: db.prepare("SELECT * FROM goals").all(),
   };
+}
+
+const PROPOSITION_TYPES = [
+  "cancel_subscription",
+  "reduce_spending",
+  "unusual_activity",
+  "savings_opportunity",
+  "positive_trend",
+] as const;
+
+export async function generateInsight(locale: Locale = DEFAULT_LOCALE): Promise<Insight> {
+  const db = getDb();
+  const context = buildFinanceContext();
 
   const schema = {
     type: "object",
@@ -62,7 +70,7 @@ export async function generateInsight(): Promise<Insight> {
     additionalProperties: false,
   } as const;
 
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey: getAnthropicKey() });
   const response = await client.messages.create({
     model: "claude-opus-4-8",
     max_tokens: 16000,
@@ -72,7 +80,10 @@ export async function generateInsight(): Promise<Insight> {
       "You are a personal finance advisor analyzing a French user's bank transactions (amounts in EUR). " +
       "Write concrete, actionable propositions grounded in the actual numbers provided: subscriptions worth cancelling or renegotiating, " +
       "categories with unusual spending vs last month, cheaper alternatives common in France, savings opportunities, and positive trends worth keeping. " +
-      "Give 3 to 6 propositions, the most impactful first. Be specific (name the merchant, cite the amount). Respond in English.",
+      "Give 3 to 6 propositions, the most impactful first. Be specific (name the merchant, cite the amount). " +
+      (locale === "fr"
+        ? "Respond in French (write the summary and all proposition titles and descriptions in French)."
+        : "Respond in English."),
     messages: [
       {
         role: "user",

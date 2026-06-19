@@ -1,0 +1,24 @@
+# Finance Watcher — Ugreen NAS deployment.
+# Rebuild + restart to pick up new code:  docker compose up -d --build
+services:
+  finance-watcher:
+    build: .
+    container_name: finance-watcher
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persists the SQLite database, uploaded receipts, and the import inbox.
+      # Drop bank CSV/PDF exports into  ./data/inbox  on the NAS to auto-import.
+      # KEEP this mount across rebuilds or you lose your data.
+      - ./data:/app/data
+    environment:
+      # Public URL incl. the /finance basePath, so Telegram receipt links work.
+      - APP_PUBLIC_URL=${APP_PUBLIC_URL:-}
+      # Optional: these can also be set in-app under Settings (stored in the DB).
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      # First-run admin (only used to seed the very first user).
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}

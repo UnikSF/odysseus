@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { fmtDate, fmtEur } from "@/lib/format";
+import { useI18n, useT } from "@/lib/i18n";
 import type { Goal } from "@/lib/types";
 
 export default function GoalsPage() {
+  const t = useT();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [avgSavings, setAvgSavings] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
@@ -23,18 +25,18 @@ export default function GoalsPage() {
   return (
     <div className="max-w-3xl space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Savings goals</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t({ fr: "Objectifs d'épargne", en: "Savings goals" })}</h1>
         <button className="btn-primary" onClick={() => setShowAdd((v) => !v)}>
-          + New goal
+          + {t({ fr: "Nouvel objectif", en: "New goal" })}
         </button>
       </div>
 
       <div className="card text-sm text-slate-400">
-        Average net savings over the last 3 months:{" "}
+        {t({ fr: "Épargne nette moyenne sur les 3 derniers mois :", en: "Average net savings over the last 3 months:" })}{" "}
         <span className={avgSavings >= 0 ? "font-semibold text-emerald-400" : "font-semibold text-rose-400"}>
-          {fmtEur(avgSavings)}/month
+          {fmtEur(avgSavings)}{t({ fr: "/mois", en: "/month" })}
         </span>
-        {" "}— forecasts below use this pace.
+        {" "}— {t({ fr: "les prévisions ci-dessous utilisent ce rythme.", en: "forecasts below use this pace." })}
       </div>
 
       {showAdd && (
@@ -48,7 +50,10 @@ export default function GoalsPage() {
 
       {goals.length === 0 && !showAdd && (
         <div className="card text-sm text-slate-500">
-          No goals yet. Create one — e.g. “Vacation fund”, 1 500 €, next summer.
+          {t({
+            fr: "Aucun objectif pour l'instant. Créez-en un — par ex. « Fonds vacances », 1 500 €, l'été prochain.",
+            en: "No goals yet. Create one — e.g. “Vacation fund”, 1 500 €, next summer.",
+          })}
         </div>
       )}
 
@@ -70,20 +75,29 @@ function GoalCard({
   avgSavings: number;
   onChanged: () => void;
 }) {
+  const t = useT();
+  const { locale } = useI18n();
   const [saved, setSaved] = useState(String(goal.saved_amount));
   const remaining = Math.max(goal.target_amount - goal.saved_amount, 0);
   const pct = Math.min((goal.saved_amount / goal.target_amount) * 100, 100);
 
   let forecast: string;
   if (remaining === 0) {
-    forecast = "Goal reached 🎉";
+    forecast = t({ fr: "Objectif atteint 🎉", en: "Goal reached 🎉" });
   } else if (avgSavings > 0) {
     const months = Math.ceil(remaining / avgSavings);
     const eta = new Date();
     eta.setMonth(eta.getMonth() + months);
-    forecast = `~${months} month${months > 1 ? "s" : ""} at your current pace (≈ ${eta.toLocaleDateString("en-GB", { month: "short", year: "numeric" })})`;
+    const etaLabel = eta.toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { month: "short", year: "numeric" });
+    forecast = t({
+      fr: `~${months} mois à votre rythme actuel (≈ ${etaLabel})`,
+      en: `~${months} month${months > 1 ? "s" : ""} at your current pace (≈ ${etaLabel})`,
+    });
   } else {
-    forecast = "No positive savings trend yet — reduce expenses to make progress.";
+    forecast = t({
+      fr: "Pas encore de tendance d'épargne positive — réduisez vos dépenses pour progresser.",
+      en: "No positive savings trend yet — reduce expenses to make progress.",
+    });
   }
 
   async function updateSaved() {
@@ -108,13 +122,13 @@ function GoalCard({
         <div className="text-base font-semibold text-slate-200">
           {goal.icon} {goal.name}
         </div>
-        <button className="text-slate-600 hover:text-rose-400" onClick={remove} title="Delete goal">
+        <button className="text-slate-600 hover:text-rose-400" onClick={remove} title={t({ fr: "Supprimer l'objectif", en: "Delete goal" })}>
           ✕
         </button>
       </div>
       <div className="mb-1 flex justify-between text-sm text-slate-400">
         <span>
-          {fmtEur(goal.saved_amount)} of {fmtEur(goal.target_amount, true)}
+          {fmtEur(goal.saved_amount)} {t({ fr: "sur", en: "of" })} {fmtEur(goal.target_amount, true)}
         </span>
         <span>{pct.toFixed(0)}%</span>
       </div>
@@ -123,7 +137,7 @@ function GoalCard({
       </div>
       <div className="mb-3 text-xs text-slate-500">
         {forecast}
-        {goal.target_date && <div>Target date: {fmtDate(goal.target_date)}</div>}
+        {goal.target_date && <div>{t({ fr: "Date cible :", en: "Target date:" })} {fmtDate(goal.target_date)}</div>}
       </div>
       <div className="flex items-center gap-2">
         <input
@@ -133,7 +147,7 @@ function GoalCard({
           onKeyDown={(e) => e.key === "Enter" && updateSaved()}
         />
         <button className="btn-secondary" onClick={updateSaved}>
-          Update saved
+          {t({ fr: "Mettre à jour l'épargne", en: "Update saved" })}
         </button>
       </div>
     </div>
@@ -141,6 +155,7 @@ function GoalCard({
 }
 
 function AddGoalForm({ onAdded }: { onAdded: () => void }) {
+  const t = useT();
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("🎯");
   const [target, setTarget] = useState("");
@@ -151,7 +166,7 @@ function AddGoalForm({ onAdded }: { onAdded: () => void }) {
     e.preventDefault();
     const amount = parseFloat(target.replace(",", "."));
     if (!amount || Number.isNaN(amount)) {
-      setError("Enter a valid target amount");
+      setError(t({ fr: "Saisissez un montant cible valide", en: "Enter a valid target amount" }));
       return;
     }
     const res = await fetch("/finance/api/goals", {
@@ -165,7 +180,7 @@ function AddGoalForm({ onAdded }: { onAdded: () => void }) {
       }),
     });
     if (!res.ok) {
-      setError("Failed to create goal");
+      setError(t({ fr: "Échec de la création de l'objectif", en: "Failed to create goal" }));
       return;
     }
     onAdded();
@@ -174,7 +189,7 @@ function AddGoalForm({ onAdded }: { onAdded: () => void }) {
   return (
     <form onSubmit={submit} className="card flex flex-wrap items-end gap-3">
       <label className="flex flex-col gap-1 text-xs text-slate-400">
-        Icon
+        {t({ fr: "Icône", en: "Icon" })}
         <select className="input" value={icon} onChange={(e) => setIcon(e.target.value)}>
           {["🎯", "✈️", "🏠", "🚗", "💍", "🎓", "🛟", "💻"].map((i) => (
             <option key={i} value={i}>
@@ -184,17 +199,17 @@ function AddGoalForm({ onAdded }: { onAdded: () => void }) {
         </select>
       </label>
       <label className="flex flex-col gap-1 text-xs text-slate-400">
-        Name
+        {t({ fr: "Nom", en: "Name" })}
         <input
           className="input w-48"
-          placeholder="Vacation fund"
+          placeholder={t({ fr: "Fonds vacances", en: "Vacation fund" })}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
       </label>
       <label className="flex flex-col gap-1 text-xs text-slate-400">
-        Target (€)
+        {t({ fr: "Montant cible (€)", en: "Target (€)" })}
         <input
           className="input w-28"
           placeholder="1500"
@@ -204,7 +219,7 @@ function AddGoalForm({ onAdded }: { onAdded: () => void }) {
         />
       </label>
       <label className="flex flex-col gap-1 text-xs text-slate-400">
-        Target date (optional)
+        {t({ fr: "Date cible (facultatif)", en: "Target date (optional)" })}
         <input
           type="date"
           className="input"
@@ -213,7 +228,7 @@ function AddGoalForm({ onAdded }: { onAdded: () => void }) {
         />
       </label>
       <button type="submit" className="btn-primary">
-        Create
+        {t({ fr: "Créer", en: "Create" })}
       </button>
       {error && <span className="text-sm text-rose-400">{error}</span>}
     </form>

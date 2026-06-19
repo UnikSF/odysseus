@@ -1,0 +1,23 @@
+# Never copy these into the build context — they must be built/installed inside
+# the image (Windows-built node_modules/.next would break the Linux container),
+# and local data/secrets must never be baked into the image.
+node_modules
+.next
+.git
+.gitignore
+.idea
+.vscode
+*.log
+npm-debug.log*
+
+# Local database, uploaded receipts and the import inbox live in a mounted volume.
+data
+samples
+
+# Secrets are provided at runtime (env or in-app Settings), not baked in.
+.env
+.env.local
+
+Dockerfile
+.dockerignore
+README*

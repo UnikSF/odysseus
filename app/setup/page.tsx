@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n";
 
 export default function SetupPage() {
+  const t = useT();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState("");
@@ -32,7 +34,7 @@ export default function SetupPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Setup failed");
+        setError(data.error ?? t({ fr: "Échec de la configuration", en: "Setup failed" }));
         return;
       }
       router.replace("/");
@@ -49,10 +51,13 @@ export default function SetupPage() {
         <div className="text-center">
           <div className="mb-2 text-3xl">💸</div>
           <h1 className="text-xl font-semibold tracking-tight text-slate-100">
-            Create your account
+            {t({ fr: "Créez votre compte", en: "Create your account" })}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            First-time setup — your data stays on this machine.
+            {t({
+              fr: "Première configuration — vos données restent sur cette machine.",
+              en: "First-time setup — your data stays on this machine.",
+            })}
           </p>
         </div>
 
@@ -60,7 +65,7 @@ export default function SetupPage() {
           <input
             className="input w-full"
             type="email"
-            placeholder="Email"
+            placeholder={t({ fr: "E-mail", en: "Email" })}
             required
             autoComplete="email"
             value={email}
@@ -69,7 +74,7 @@ export default function SetupPage() {
           <input
             className="input w-full"
             type="password"
-            placeholder="Password (min. 8 characters)"
+            placeholder={t({ fr: "Mot de passe (8 caractères min.)", en: "Password (min. 8 characters)" })}
             required
             minLength={8}
             autoComplete="new-password"
@@ -78,7 +83,9 @@ export default function SetupPage() {
           />
           {error && <p className="text-sm text-rose-400">{error}</p>}
           <button className="btn-primary w-full" type="submit" disabled={saving}>
-            {saving ? "Creating account…" : "Create account & continue"}
+            {saving
+              ? t({ fr: "Création du compte…", en: "Creating account…" })
+              : t({ fr: "Créer le compte et continuer", en: "Create account & continue" })}
           </button>
         </form>
       </div>

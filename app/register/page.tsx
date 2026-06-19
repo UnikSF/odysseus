@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useT } from "@/lib/i18n";
 
 export default function RegisterPage() {
+  const t = useT();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +25,7 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Registration failed");
+        setError(data.error ?? t({ fr: "Échec de l'inscription", en: "Registration failed" }));
         return;
       }
       router.replace("/");
@@ -37,15 +39,15 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm space-y-6 rounded-2xl border border-slate-800 bg-slate-900 p-8">
         <div className="text-center">
           <div className="mb-2 text-3xl">💸</div>
-          <h1 className="text-xl font-semibold tracking-tight text-slate-100">Create an account</h1>
-          <p className="mt-1 text-sm text-slate-500">Sign up to start tracking your finances</p>
+          <h1 className="text-xl font-semibold tracking-tight text-slate-100">{t({ fr: "Créer un compte", en: "Create an account" })}</h1>
+          <p className="mt-1 text-sm text-slate-500">{t({ fr: "Inscrivez-vous pour suivre vos finances", en: "Sign up to start tracking your finances" })}</p>
         </div>
 
         <form onSubmit={submit} className="space-y-3">
           <input
             className="input w-full"
             type="email"
-            placeholder="Email"
+            placeholder={t({ fr: "E-mail", en: "Email" })}
             required
             autoComplete="email"
             value={email}
@@ -54,7 +56,7 @@ export default function RegisterPage() {
           <input
             className="input w-full"
             type="password"
-            placeholder="Password (min. 8 characters)"
+            placeholder={t({ fr: "Mot de passe (8 caractères min.)", en: "Password (min. 8 characters)" })}
             required
             minLength={8}
             autoComplete="new-password"
@@ -63,14 +65,14 @@ export default function RegisterPage() {
           />
           {error && <p className="text-sm text-rose-400">{error}</p>}
           <button className="btn-primary w-full" type="submit" disabled={loading}>
-            {loading ? "Creating account…" : "Create account"}
+            {loading ? t({ fr: "Création du compte…", en: "Creating account…" }) : t({ fr: "Créer un compte", en: "Create account" })}
           </button>
         </form>
 
         <p className="text-center text-sm text-slate-500">
-          Already have an account?{" "}
+          {t({ fr: "Vous avez déjà un compte ?", en: "Already have an account?" })}{" "}
           <Link href="/login" className="text-emerald-400 hover:text-emerald-300">
-            Sign in
+            {t({ fr: "Se connecter", en: "Sign in" })}
           </Link>
         </p>
       </div>

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, getSetting } from "@/lib/db";
 import { aiConfigured } from "@/lib/categorize";
 import { gocardlessConfigured } from "@/lib/gocardless";
+import { telegramConfigured } from "@/lib/telegram";
+import { schedulerRunning } from "@/lib/scheduler";
+import { inboxDir } from "@/lib/inbox";
 
 export function GET() {
   const db = getDb();
@@ -10,6 +13,10 @@ export function GET() {
   return NextResponse.json({
     gocardlessConfigured: gocardlessConfigured(),
     aiConfigured: aiConfigured(),
+    telegramConfigured: telegramConfigured(),
+    schedulerRunning: schedulerRunning(),
+    syncIntervalHours: Number(getSetting("sync_interval_hours")) || 6,
+    importFolder: inboxDir(),
     accounts,
     txCount,
   });

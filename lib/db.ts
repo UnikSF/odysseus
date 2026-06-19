@@ -16,7 +16,20 @@ export function getDb(): Database.Database {
   db.pragma("foreign_keys = ON");
   migrate(db);
   seedAdmin(db);
+  maybeStartScheduler();
   return db;
+}
+
+// Start the background scheduler (auto-sync + Telegram polling) once, on the
+// first DB access. This runs only in the Node.js server (db.ts is never bundled
+// for the edge/client), which avoids edge-runtime issues with instrumentation.ts.
+let schedulerKicked = false;
+function maybeStartScheduler() {
+  if (schedulerKicked) return;
+  schedulerKicked = true;
+  import("./scheduler")
+    .then((m) => m.startScheduler())
+    .catch((e) => console.error("[db] failed to start scheduler", e));
 }
 
 function migrate(db: Database.Database) {
@@ -127,9 +140,46 @@ function migrate(db: Database.Database) {
       expires_at TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS receipts (
+      id TEXT PRIMARY KEY,
+      transaction_id TEXT REFERENCES transactions(id) ON DELETE SET NULL,
+      file_path TEXT NOT NULL,
+      mime TEXT NOT NULL DEFAULT '',
+      merchant TEXT NOT NULL DEFAULT '',
+      total REAL,
+      currency TEXT NOT NULL DEFAULT 'EUR',
+      parsed_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS tg_notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      transaction_id TEXT NOT NULL,
+      chat_id TEXT NOT NULL,
+      message_id INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
+  // Idempotent column additions for existing databases.
+  addColumnIfMissing(db, "transactions", "ai_confidence", "TEXT");
+  addColumnIfMissing(db, "transactions", "receipt_id", "TEXT");
+  addColumnIfMissing(db, "accounts", "baseline_synced", "INTEGER NOT NULL DEFAULT 0");
+
   seed(db);
+}
+
+/** Add a column only if it doesn't already exist (better-sqlite3 has no IF NOT EXISTS for columns). */
+function addColumnIfMissing(
+  db: Database.Database,
+  table: string,
+  column: string,
+  definition: string
+) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (cols.some((c) => c.name === column)) return;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
 }
 
 const DEFAULT_CATEGORIES: Array<[string, string, string, string]> = [

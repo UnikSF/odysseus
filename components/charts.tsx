@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { fmtEur } from "@/lib/format";
+import { useI18n, useT } from "@/lib/i18n";
 import type { CategorySpend, MonthlyFlow } from "@/lib/stats";
 
 const tooltipStyle = {
@@ -24,8 +25,10 @@ const tooltipStyle = {
 };
 
 export function CategoryDonut({ data }: { data: CategorySpend[] }) {
+  const t = useT();
+  const { tCat } = useI18n();
   if (data.length === 0) {
-    return <Empty label="No expenses this month yet" />;
+    return <Empty label={t({ fr: "Aucune dépense ce mois-ci", en: "No expenses this month yet" })} />;
   }
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -45,10 +48,12 @@ export function CategoryDonut({ data }: { data: CategorySpend[] }) {
         </Pie>
         <Tooltip
           contentStyle={tooltipStyle}
-          formatter={(value) => fmtEur(Number(value))}
+          formatter={(value, name) => [fmtEur(Number(value)), tCat(String(name))]}
         />
         <Legend
-          formatter={(value) => <span style={{ color: "#94a3b8", fontSize: 12 }}>{value}</span>}
+          formatter={(value) => (
+            <span style={{ color: "#94a3b8", fontSize: 12 }}>{tCat(String(value))}</span>
+          )}
         />
       </PieChart>
     </ResponsiveContainer>
@@ -56,8 +61,9 @@ export function CategoryDonut({ data }: { data: CategorySpend[] }) {
 }
 
 export function FlowChart({ data }: { data: MonthlyFlow[] }) {
+  const t = useT();
   if (data.length === 0) {
-    return <Empty label="No data yet" />;
+    return <Empty label={t({ fr: "Aucune donnée", en: "No data yet" })} />;
   }
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -70,8 +76,18 @@ export function FlowChart({ data }: { data: MonthlyFlow[] }) {
           formatter={(value) => fmtEur(Number(value))}
           cursor={{ fill: "#1e293b", opacity: 0.4 }}
         />
-        <Bar dataKey="income" name="Income" fill="#34d399" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="expenses" name="Expenses" fill="#fb7185" radius={[6, 6, 0, 0]} />
+        <Bar
+          dataKey="income"
+          name={t({ fr: "Revenus", en: "Income" })}
+          fill="#34d399"
+          radius={[6, 6, 0, 0]}
+        />
+        <Bar
+          dataKey="expenses"
+          name={t({ fr: "Dépenses", en: "Expenses" })}
+          fill="#fb7185"
+          radius={[6, 6, 0, 0]}
+        />
       </BarChart>
     </ResponsiveContainer>
   );
