@@ -111,10 +111,12 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
             raise HTTPException(400, "Password must be at least 8 characters")
         if len(body.username.strip()) < 1:
             raise HTTPException(400, "Username is required")
-        ok = await asyncio.to_thread(auth_manager.create_user, body.username, body.password, is_admin=False)
+        # approved=False: self-signups stay pending until an admin approves them
+        # (anti-abuse — no open account can log in without review).
+        ok = await asyncio.to_thread(auth_manager.create_user, body.username, body.password, is_admin=False, approved=False)
         if not ok:
             raise HTTPException(409, "Username already taken")
-        return {"ok": True, "message": "Account created"}
+        return {"ok": True, "message": "Account created — pending admin approval before you can sign in."}
 
     @router.post("/login")
     async def login(body: LoginRequest, request: Request, response: Response):
@@ -124,6 +126,10 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
         username = body.username.strip().lower()
         if not await asyncio.to_thread(auth_manager.verify_password, username, body.password):
             raise HTTPException(401, "Invalid credentials")
+        # Block accounts awaiting admin approval (checked after password so it
+        # doesn't reveal which usernames exist).
+        if not auth_manager.is_approved(username):
+            raise HTTPException(403, "Account pending admin approval.")
         # Check 2FA if enabled
         if auth_manager.totp_enabled(username):
             if not body.totp_code:
@@ -172,6 +178,17 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
         except Exception:
             pass
         return result
+
+    @router.get("/verify")
+    async def auth_verify(request: Request):
+        """Lightweight gate for reverse-proxy `auth_request`: returns 204 when
+        the caller holds a valid session cookie, 401 otherwise. NPM forwards
+        the original request's cookie here and lets protected upstreams
+        (Finance, Clustering, …) through only on a 2xx. This is what makes one
+        Odysseus login grant access across every app on the domain."""
+        if _get_current_user(request):
+            return Response(status_code=204)
+        raise HTTPException(401, "Not authenticated")
 
     @router.post("/change-password")
     async def change_password(body: ChangePasswordRequest, request: Request):
@@ -264,6 +281,15 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
         ok = auth_manager.create_user(body.username, body.password, body.is_admin)
         if not ok:
             raise HTTPException(409, "Username already taken")
+        return {"ok": True}
+
+    @router.post("/users/{username}/approve")
+    async def approve_user(username: str, request: Request):
+        user = _get_current_user(request)
+        if not user or not auth_manager.is_admin(user):
+            raise HTTPException(403, "Admin only")
+        if not auth_manager.approve_user(username, user):
+            raise HTTPException(404, "User not found")
         return {"ok": True}
 
     @router.put("/users/{username}/privileges")

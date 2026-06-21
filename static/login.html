@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
 <title>Odysseus — Login</title>
+<script defer src="/static/i18n-dict-login.js"></script>
+<script defer src="/static/i18n.js"></script>
 <script nonce="{{CSP_NONCE}}">
 (function(){
   // Per-theme bg-effect defaults — mirrors THEME_DEFAULT_* maps in
@@ -443,6 +445,15 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Account creation failed');
+        // Self-signups are created pending admin approval — don't auto-login
+        // (it would 403). Show the message and return to the sign-in form.
+        if (mode === 'signup') {
+          setupNote.textContent = data.message || 'Account created — pending admin approval.';
+          setupNote.style.display = 'block';
+          setMode('login');
+          submitBtn.disabled = false;
+          return;
+        }
       } catch (err) {
         errEl.textContent = err.message;
         errEl.style.display = 'block';

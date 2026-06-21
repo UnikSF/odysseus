@@ -50,10 +50,11 @@ async function loadUsers() {
           <div style="width:28px;height:28px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, var(--panel));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;color:var(--accent);">${esc(initial)}</div>
           <div>
             <span class="admin-user-name">${esc(u.username)}</span>
-            ${u.is_admin ? '<span class="admin-badge" style="margin-left:6px;">ADMIN</span>' : '<span style="font-size:10px;opacity:0.4;display:block;">Click to manage privileges</span>'}
+            ${u.is_admin ? '<span class="admin-badge" style="margin-left:6px;">ADMIN</span>' : (u.approved ? '<span style="font-size:10px;opacity:0.4;display:block;">Click to manage privileges</span>' : '<span class="admin-badge" style="margin-left:6px;background:#a3621a;color:#fff;">PENDING</span>')}
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
+          ${u.approved ? '' : `<button class="admin-btn-sm" data-adm-approve-user="${esc(u.username)}" style="font-size:11px;background:var(--green,#50fa7b);color:#000;font-weight:600;">Approve</button>`}
           <button class="admin-btn-sm" data-adm-rename-user="${esc(u.username)}" style="font-size:11px;">Rename</button>
           ${u.is_admin ? '' : `<button class="admin-btn-delete" data-adm-del-user="${esc(u.username)}" style="font-size:11px;">Remove</button>`}
           ${u.is_admin ? '' : '<svg class="admin-user-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;transition:transform 0.2s,opacity 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>'}
@@ -178,6 +179,18 @@ async function loadUsers() {
           } catch (err) {
             uiModule.showError('Failed to rename user');
           }
+        });
+      }
+
+      // Approve button (pending self-signups)
+      const approveBtn = row.querySelector('[data-adm-approve-user]');
+      if (approveBtn) {
+        approveBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const username = approveBtn.dataset.admApproveUser;
+          const res = await fetch(`/api/auth/users/${encodeURIComponent(username)}/approve`, { method: 'POST', credentials: 'same-origin' });
+          if (res.ok) loadUsers();
+          else uiModule.showError('Failed to approve user');
         });
       }
 

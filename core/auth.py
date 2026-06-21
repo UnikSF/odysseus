@@ -190,8 +190,9 @@ class AuthManager:
                 return False
             return self.create_user(username, password, is_admin=True)
 
-    def create_user(self, username: str, password: str, is_admin: bool = False) -> bool:
-        """Create a new user account."""
+    def create_user(self, username: str, password: str, is_admin: bool = False, approved: bool = True) -> bool:
+        """Create a new user account. `approved=False` (self-signup) leaves the
+        account pending until an admin approves it — it cannot log in meanwhile."""
         username = username.strip().lower()
         if not username:
             return False
@@ -206,6 +207,7 @@ class AuthManager:
             "password_hash": _hash_password(password),
             "created": time.time(),
             "is_admin": is_admin,
+            "approved": True if is_admin else approved,
             "privileges": dict(ADMIN_PRIVILEGES if is_admin else DEFAULT_PRIVILEGES),
         }
         self._save()
@@ -293,9 +295,29 @@ class AuthManager:
     def is_admin(self, username: str) -> bool:
         return self.users.get(username, {}).get("is_admin", False)
 
+    def is_approved(self, username: str) -> bool:
+        """Approved gate. Defaults True so accounts created before this feature
+        (no `approved` key) are not locked out; admins are always approved."""
+        u = self.users.get(username, {})
+        return bool(u.get("is_admin") or u.get("approved", True))
+
+    def approve_user(self, username: str, requesting_user: str) -> bool:
+        """Admin-only: approve a pending account so it can log in."""
+        username = username.strip().lower()
+        if username not in self.users:
+            return False
+        if not self.users.get(requesting_user, {}).get("is_admin"):
+            return False
+        self._config["users"][username]["approved"] = True
+        self._save()
+        logger.info(f"Approved user '{username}' (by {requesting_user})")
+        return True
+
     def list_users(self) -> List[Dict[str, Any]]:
         return [
-            {"username": u, "is_admin": d.get("is_admin", False), "privileges": self.get_privileges(u)}
+            {"username": u, "is_admin": d.get("is_admin", False),
+             "approved": bool(d.get("is_admin") or d.get("approved", True)),
+             "privileges": self.get_privileges(u)}
             for u, d in self.users.items()
         ]
 

@@ -170,6 +170,7 @@ if AUTH_ENABLED:
         "/api/auth/login",
         "/api/auth/logout",
         "/api/auth/status",
+        "/api/auth/verify",
         "/api/auth/features",
         "/api/auth/settings",
         "/api/auth/integrations/presets",
@@ -751,6 +752,15 @@ def _serve_html_with_nonce(request: Request, file_path: str) -> HTMLResponse:
         # Rewrite absolute static asset paths so they resolve under the prefix.
         html = html.replace('src="/static/', f'src="{ROOT_PATH}/static/')
         html = html.replace('href="/static/', f'href="{ROOT_PATH}/static/')
+        # location.replace/assign/href CANNOT be monkey-patched in browsers
+        # (Location members are read-only), so the fetch-style shim below misses
+        # them. Rewrite the literal absolute redirects (e.g. post-login → "/")
+        # to carry the prefix; otherwise login bounces to the proxy root (the
+        # landing page) instead of the app.
+        html = html.replace("location.replace('/')", f"location.replace('{ROOT_PATH}/')")
+        html = html.replace('location.replace("/")', f'location.replace("{ROOT_PATH}/")')
+        html = html.replace("location.href='/'", f"location.href='{ROOT_PATH}/'")
+        html = html.replace('location.href="/"', f'location.href="{ROOT_PATH}/"')
         # Monkey-patch fetch + EventSource so all JS API/SSE calls are prefixed
         # without touching the JS source files.
         patch = (
