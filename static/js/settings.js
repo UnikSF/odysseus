@@ -2166,7 +2166,8 @@ function initAccount() {
         _toRemove.forEach(k => localStorage.removeItem(k));
         sessionStorage.clear();
       } catch (_) {}
-      window.location.href = '/login';
+      // Back to the homelab landing (domain root), not Odysseus's own login.
+      window.location.href = '/';
     });
   }
 }

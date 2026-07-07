@@ -36,7 +36,7 @@ async def _request_values(request: Request) -> Dict[str, Any]:
     return values
 
 
-def setup_search_routes(config) -> APIRouter:
+def setup_search_routes() -> APIRouter:
     router = APIRouter(tags=["search"])
 
     @router.get("/api/search/config")

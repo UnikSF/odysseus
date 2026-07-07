@@ -464,9 +464,6 @@ else:
         "(ChromaDB may not be reachable yet — routes will retry lazily)"
     )
 
-# ========= IMPORT CONFIG =========
-from src.config import config
-
 # ========= COMPONENT INITIALIZATION =========
 from src.app_initializer import initialize_managers
 
@@ -575,7 +572,7 @@ app.include_router(setup_history_routes(session_manager))
 
 # Search
 from routes.search_routes import setup_search_routes
-app.include_router(setup_search_routes(config))
+app.include_router(setup_search_routes())
 
 # Presets
 from routes.preset_routes import setup_preset_routes

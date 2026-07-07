@@ -32,17 +32,17 @@ logger = logging.getLogger(__name__)
 def main():
     """Main function to index documents from personal_docs directory."""
     
-    # Import RAGManager
+    # Import VectorRAG
     try:
-        from src.rag_manager import RAGManager
-        logger.info("Successfully imported RAGManager")
+        from src.rag_vector import VectorRAG
+        logger.info("Successfully imported VectorRAG")
     except ImportError as e:
-        logger.error(f"Failed to import RAGManager: {e}")
-        logger.error("Make sure rag_manager.py is in the same directory and accessible")
+        logger.error(f"Failed to import VectorRAG: {e}")
+        logger.error("Make sure src/rag_vector.py is accessible")
         return
-    
-    # Initialize RAGManager
-    rag_manager = RAGManager()
+
+    # Initialize VectorRAG
+    rag_manager = VectorRAG()
     
     # Directory to scan
     docs_directory = "data/personal_docs"

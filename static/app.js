@@ -46,7 +46,12 @@ import { initKeyboardShortcuts } from './js/keyboard-shortcuts.js';
 import { initSidebarLayout, syncRailSide } from './js/sidebar-layout.js';
 import { initSectionCollapse, initSectionDrag } from './js/section-management.js';
 
-const API_BASE = window.location.origin;
+// Empty so all `${API_BASE}/api/...` calls are root-relative ("/api/...").
+// When served under a path prefix (ROOT_PATH=/odysseus) the server-injected
+// fetch/EventSource shim rewrites "/..." → "/odysseus/...". Using
+// window.location.origin here produced absolute URLs that bypassed that shim
+// and hit the domain root (404), breaking API calls — incl. the admin check.
+const API_BASE = "";
 window.themeModule = themeModule;
 window.sessionModule = sessionModule;
 window.uiModule = uiModule;
